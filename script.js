@@ -66,9 +66,12 @@ window.addEventListener('DOMContentLoaded', () => {
         viewHistoryBtn.addEventListener('click', showHistoryScreen);
     }
     
-    // 测试导航
+    // 导航按钮
     prevBtn.addEventListener('click', goToPreviousQuestion);
     nextBtn.addEventListener('click', goToNextQuestion);
+    
+    // 添加调试日志
+    console.log('导航按钮事件监听器已绑定');
     
     // 选项选择
     options.forEach(option => {
@@ -148,35 +151,41 @@ function calculateAge(birthDate) {
 
 // 显示题目
 function showQuestion(index) {
-    const question = scl90Questions[index];
-    
-    // 更新题目信息
-    questionNumber.textContent = `第 ${question.id} 题`;
-    questionText.textContent = question.text;
-    
-    // 更新进度信息
-    currentQuestionEl.textContent = `第 ${index + 1} 题`;
-    totalQuestionsEl.textContent = `共 ${scl90Questions.length} 题`;
-    remainingQuestionsEl.textContent = `剩余 ${scl90Questions.length - index - 1} 题`;
-    
-    // 更新进度条
-    const progress = ((index + 1) / scl90Questions.length) * 100;
-    progressFill.style.width = `${progress}%`;
-    
-    // 重置选项
-    options.forEach((option, i) => {
-        option.checked = answers[index] === String(i + 1);
-    });
-    
-    // 更新导航按钮状态
-    prevBtn.disabled = index === 0;
-    nextBtn.disabled = answers[index] === null;
-    
-    // 如果是最后一题，更改按钮文本
-    nextBtn.textContent = index === scl90Questions.length - 1 ? '完成测试' : '下一题';
-    
-    // 滚动到顶部
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+        const question = scl90Questions[index];
+        
+        // 更新题目信息
+        questionNumber.textContent = `第 ${question.id} 题`;
+        questionText.textContent = question.text;
+        
+        // 更新进度信息
+        currentQuestionEl.textContent = `第 ${index + 1} 题`;
+        totalQuestionsEl.textContent = `共 ${scl90Questions.length} 题`;
+        remainingQuestionsEl.textContent = `剩余 ${scl90Questions.length - index - 1} 题`;
+        
+        // 更新进度条
+        const progress = ((index + 1) / scl90Questions.length) * 100;
+        progressFill.style.width = `${progress}%`;
+        
+        // 重置选项
+        options.forEach((option, i) => {
+            option.checked = answers[index] === String(i + 1);
+        });
+        
+        // 更新导航按钮状态
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = answers[index] === null;
+        
+        // 如果是最后一题，更改按钮文本
+        nextBtn.textContent = index === scl90Questions.length - 1 ? '完成测试' : '下一题';
+        
+        console.log(`显示第${index + 1}题，按钮文本: ${nextBtn.textContent}`);
+        
+        // 滚动到顶部
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+        console.error('显示题目时发生错误:', error);
+    }
 }
 
 // 上一题
@@ -191,15 +200,28 @@ function goToPreviousQuestion() {
 
 // 下一题
 function goToNextQuestion() {
-    // 保存当前答案
-    saveCurrentAnswer();
-    
-    if (currentQuestionIndex < scl90Questions.length - 1) {
-        currentQuestionIndex++;
-        showQuestion(currentQuestionIndex);
-    } else {
-        // 完成测试
-        finishTest();
+    try {
+        // 保存当前答案
+        saveCurrentAnswer();
+        
+        // 检查当前是否已选择答案（特别是最后一题）
+        const selectedOption = document.querySelector('.option input[type="radio"]:checked');
+        if (!selectedOption && currentQuestionIndex === scl90Questions.length - 1) {
+            alert('请先选择一个答案再提交测试！');
+            return;
+        }
+        
+        if (currentQuestionIndex < scl90Questions.length - 1) {
+            currentQuestionIndex++;
+            showQuestion(currentQuestionIndex);
+        } else {
+            // 完成测试
+            console.log('到达最后一题，准备完成测试');
+            finishTest();
+        }
+    } catch (error) {
+        console.error('导航到下一题时发生错误:', error);
+        alert('处理题目时发生错误，请重试。');
     }
 }
 
@@ -208,6 +230,9 @@ function saveCurrentAnswer() {
     const selectedOption = document.querySelector('.option input[type="radio"]:checked');
     if (selectedOption) {
         answers[currentQuestionIndex] = selectedOption.value;
+        console.log(`保存第${currentQuestionIndex + 1}题答案: ${selectedOption.value}`);
+    } else {
+        console.log(`第${currentQuestionIndex + 1}题未选择答案`);
     }
 }
 
@@ -233,28 +258,38 @@ function startTimer() {
 
 // 完成测试
 function finishTest() {
-    // 停止计时器
-    clearInterval(timerInterval);
-    
-    // 移除testing类，恢复主题按钮位置
-    document.body.classList.remove('testing');
-    
-    // 保存测试结束时间
-    const endTime = new Date();
-    const duration = Math.floor((endTime - testStartTime) / 1000); // 秒
-    
-    // 计算得分
-    const scores = calculateScores();
-    
-    // 保存测试结果
-    saveTestResult(userInfo, scores, answers);
-    
-    // 显示结果页面
-    showResults(scores, endTime, duration);
-    
-    // 切换页面
-    testScreen.classList.add('hidden');
-    resultScreen.classList.remove('hidden');
+    try {
+        // 停止计时器
+        clearInterval(timerInterval);
+        
+        // 移除testing类，恢复主题按钮位置
+        document.body.classList.remove('testing');
+        
+        // 保存测试结束时间
+        const endTime = new Date();
+        const duration = Math.floor((endTime - testStartTime) / 1000); // 秒
+        
+        // 计算得分
+        const scores = calculateScores();
+        
+        // 保存测试结果
+        const saveSuccess = saveTestResult(userInfo, scores, answers);
+        if (!saveSuccess) {
+            console.warn('测试结果保存失败，但仍然显示结果');
+        }
+        
+        // 显示结果页面
+        showResults(scores, endTime, duration);
+        
+        // 切换页面
+        testScreen.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        
+        console.log('测试完成，结果已显示');
+    } catch (error) {
+        console.error('完成测试时发生错误:', error);
+        alert('提交测试时发生错误，请重试。如果问题持续存在，请联系技术支持。');
+    }
 }
 
 // 计算得分
@@ -384,7 +419,11 @@ function updateScoreWithColor(elementId, score) {
 
 // 生成各个因子分析
 function generateFactorAnalysis(scores) {
-    const factorAnalysisContainer = document.getElementById('factor-analysis-container');
+    const factorAnalysisContainer = document.getElementById('factor-analysis');
+    if (!factorAnalysisContainer) {
+        console.error('错误：找不到因子分析容器元素 (factor-analysis)');
+        return;
+    }
     factorAnalysisContainer.innerHTML = '';
     
     // 因子分析数据
@@ -539,7 +578,10 @@ function generateFactorAnalysis(scores) {
 // 生成结果解释（保留原函数用于历史兼容性）
 function generateInterpretation(scores) {
     const interpretation = document.getElementById('result-interpretation');
-    if (!interpretation) return;
+    if (!interpretation) {
+        console.error('错误：找不到结果解释元素 (result-interpretation)');
+        return;
+    }
     
     let level = '';
     
@@ -553,12 +595,17 @@ function generateInterpretation(scores) {
         level = 'severe';
     }
     
-    document.getElementById('result-interpretation').textContent = interpretation[level];
+    interpretation.textContent = interpretation[level];
 }
 
 // 绘制图表
 function drawChart(scores) {
-    const ctx = document.getElementById('result-chart').getContext('2d');
+    const chartCanvas = document.getElementById('result-chart');
+    if (!chartCanvas) {
+        console.error('错误：找不到图表画布元素 (result-chart)');
+        return;
+    }
+    const ctx = chartCanvas.getContext('2d');
     
     // 检查是否是移动设备
     const isMobile = window.innerWidth < 768;
@@ -692,112 +739,112 @@ function downloadPDF() {
         const pageWidth = 210; // A4宽度(mm)
         const pageHeight = 297; // A4高度(mm)
         
-        // 计算最佳缩放比例 - 保持原始比例，适应A4页面
-        const margin = 20; // 边距
+        // 优化边距设置 - 减小边距以最大化可用空间
+        const margin = 15; // 减小边距从20到15mm
         const availableWidth = pageWidth - (margin * 2); // 可用宽度
         const availableHeight = pageHeight - (margin * 2); // 可用高度
         
-        // 计算缩放比例，保持宽高比
-        const scale = Math.min(availableWidth / containerWidth, availableHeight / containerHeight);
+        // 提高清晰度 - 增大缩放比例到3倍
+        const canvasScale = 3;
+        
+        // 计算缩放比例，保持宽高比，但优先保证可读性
+        const scale = Math.min(availableWidth / containerWidth, availableHeight / containerHeight, 1.2); // 最大放大到1.2倍
         
         // 计算最终图片尺寸
         const finalWidth = containerWidth * scale;
         const finalHeight = containerHeight * scale;
         
-        // 创建canvas并绘制结果页面 - 优化参数以提高清晰度
-        html2canvas(resultContainer, {
-            scale: 2, // 适当降低缩放以提高性能和减少文件大小
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff', // 强制白色背景
-            width: containerWidth,
-            height: containerHeight,
-            scrollX: 0,
-            scrollY: 0,
-            windowWidth: containerWidth,
-            windowHeight: containerHeight,
-            allowTaint: true, // 允许跨域图片
-            taintTest: false // 跳过污染测试以提高性能
-        }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png', 0.95); // 高质量但不过度
+        console.log('PDF导出参数:', {
+            containerWidth, containerHeight, scale, finalWidth, finalHeight, availableHeight
+        });
+        
+        // 关键改进：强制分页处理，确保内容不会压缩到单页
+        const forcePagination = true;
+        
+        if (forcePagination || finalHeight > availableHeight) {
+            // 计算每页应该显示的内容高度（像素）- 优化计算方式
+            const contentPerPagePixels = Math.floor(availableHeight / scale);
+            const totalPages = Math.ceil(containerHeight / contentPerPagePixels);
             
-            // 如果内容高度超过单页可用高度，需要分页处理
-            if (finalHeight > availableHeight) {
-                // 计算每页应该显示的内容高度（像素）
-                const contentPerPage = Math.floor(availableHeight / scale);
-                const totalPages = Math.ceil(containerHeight / contentPerPage);
-                
-                // 使用Promise来确保所有页面都处理完成
-                const pagePromises = [];
-                
-                for (let page = 0; page < totalPages; page++) {
-                    if (page > 0) {
-                        doc.addPage();
-                    }
-                    
-                    // 计算当前页的内容区域
-                    const startY = page * contentPerPage;
-                    const endY = Math.min(startY + contentPerPage, containerHeight);
-                    const pageHeightPixels = endY - startY;
-                    
-                    // 如果这一页有内容才添加
-                    if (pageHeightPixels > 50) { // 只有当内容高度大于50像素时才添加页面
-                        const pagePromise = html2canvas(resultContainer, {
-                            scale: 2,
-                            useCORS: true,
-                            logging: false,
-                            backgroundColor: '#ffffff',
-                            width: containerWidth,
-                            height: pageHeightPixels,
-                            x: 0,
-                            y: startY,
-                            scrollX: 0,
-                            scrollY: startY,
-                            windowWidth: containerWidth,
-                            windowHeight: containerHeight,
-                            allowTaint: true,
-                            taintTest: false
-                        }).then(pageCanvas => {
-                            const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
-                            const pageImgWidth = finalWidth;
-                            const pageImgHeight = pageHeightPixels * scale;
-                            
-                            // 计算垂直居中位置
-                            const centerY = (pageHeight - pageImgHeight) / 2;
-                            
-                            doc.addImage(pageImgData, 'PNG', margin, Math.max(margin, centerY), 
-                                       pageImgWidth, pageImgHeight, '', 'FAST');
-                        });
-                        
-                        pagePromises.push(pagePromise);
-                    }
+            console.log(`需要分页处理: ${totalPages}页，每页${contentPerPagePixels}像素`);
+            
+            // 使用Promise来确保所有页面都处理完成
+            const pagePromises = [];
+            
+            for (let page = 0; page < totalPages; page++) {
+                if (page > 0) {
+                    doc.addPage();
                 }
                 
-                // 等待所有页面处理完成后再保存PDF
-                Promise.all(pagePromises).then(() => {
-                    // 保存PDF
-                    doc.save(generateFileName('pdf'));
-                });
+                // 计算当前页的内容区域
+                const startY = page * contentPerPagePixels;
+                const endY = Math.min(startY + contentPerPagePixels, containerHeight);
+                const pageHeightPixels = endY - startY;
                 
-                // 等待所有页面处理完成后再保存PDF
-                Promise.all(pagePromises).then(() => {
-                    // 保存PDF
-                    doc.save(generateFileName('pdf'));
-                });
-            } else {
-                // 单页可以显示完整内容 - 居中显示
-                const centerX = (pageWidth - finalWidth) / 2;
-                const centerY = (pageHeight - finalHeight) / 2;
+                console.log(`处理第${page + 1}页: 起始Y=${startY}, 结束Y=${endY}, 高度=${pageHeightPixels}`);
                 
-                doc.addImage(imgData, 'PNG', centerX, centerY, finalWidth, finalHeight, '', 'FAST');
-                
+                // 如果这一页有内容才添加
+                if (pageHeightPixels > 30) { // 降低最小高度要求
+                    const pagePromise = html2canvas(resultContainer, {
+                        scale: canvasScale, // 使用相同的缩放比例
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        width: containerWidth,
+                        height: pageHeightPixels,
+                        x: 0,
+                        y: startY,
+                        scrollX: 0,
+                        scrollY: startY,
+                        windowWidth: containerWidth,
+                        windowHeight: containerHeight,
+                        allowTaint: true,
+                        taintTest: false,
+                        imageTimeout: 0,
+                        removeContainer: false
+                    }).then(pageCanvas => {
+                        const pageImgData = pageCanvas.toDataURL('image/png', 1.0); // 最高质量
+                        
+                        // 重要改进：每页都使用完整的页面宽度，确保内容清晰
+                        const pageImgWidth = finalWidth;
+                        const pageImgHeight = pageHeightPixels * scale;
+                        
+                        // 计算位置：水平居中，垂直从顶部开始（避免不必要的空白）
+                        const centerX = (pageWidth - pageImgWidth) / 2;
+                        const topY = margin; // 从顶部边距开始，避免垂直居中造成的空白
+                        
+                        console.log(`添加第${page + 1}页图片: 位置(${centerX}, ${topY}), 尺寸(${pageImgWidth}, ${pageImgHeight})`);
+                        
+                        doc.addImage(pageImgData, 'PNG', centerX, topY, 
+                                   pageImgWidth, pageImgHeight, '', 'SLOW'); // 使用高质量渲染
+                    }).catch(err => {
+                        console.error(`第${page + 1}页生成失败:`, err);
+                    });
+                    
+                    pagePromises.push(pagePromise);
+                }
+            }
+            
+            // 等待所有页面处理完成后再保存PDF
+            Promise.all(pagePromises).then(() => {
+                console.log('PDF生成完成，开始保存...');
                 // 保存PDF
                 doc.save(generateFileName('pdf'));
-            }
-        }).catch(err => {
-            console.error('PDF生成失败:', err);
-            alert('PDF下载失败，请重试。');
-        });
+                console.log('PDF保存完成');
+            }).catch(err => {
+                console.error('PDF生成失败:', err);
+                alert('PDF生成失败，请重试。');
+            });
+        } else {
+            // 单页可以显示完整内容 - 居中显示
+            const centerX = (pageWidth - finalWidth) / 2;
+            const centerY = (pageHeight - finalHeight) / 2;
+            
+            doc.addImage(imgData, 'PNG', centerX, centerY, finalWidth, finalHeight, '', 'SLOW'); // 使用高质量渲染
+            
+            // 保存PDF
+            doc.save(generateFileName('pdf'));
+        }
     } catch (error) {
         console.error('PDF下载错误:', error);
         alert('PDF下载功能需要额外的库支持，请重试。');
