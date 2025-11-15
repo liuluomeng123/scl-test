@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCL-90心理自测试题</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="light">
+    <div class="container">
+        <!-- 模式切换按钮 -->
+        <button id="theme-toggle" class="theme-toggle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3v1M12 20v1M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h1M20 12h1M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+        </button>
+
+        <!-- 开始页面 -->
+        <div id="start-screen" class="screen">
+            <h1>SCL-90心理自评量表</h1>
+            <p class="intro">SCL-90是一种广泛使用的心理健康自评量表，包含90个项目，从多个维度评估心理健康状况。</p>
+            
+            <form id="user-info-form">
+                <div class="form-group">
+                    <label for="nickname">昵称</label>
+                    <input type="text" id="nickname" required placeholder="请输入您的昵称">
+                </div>
+                
+                <div class="form-group">
+                    <label for="birthday-input">生日</label>
+                    <input type="text" id="birthday-input" required placeholder="点击选择生日" readonly>
+                    <input type="hidden" id="birthday" name="birthday">
+                </div>
+                
+                <div class="form-group">
+                    <label for="gender">性别</label>
+                    <select id="gender" required>
+                        <option value="">请选择性别</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn primary">开始测试</button>
+            </form>
+            
+            <div class="history-section">
+                <button id="view-history" class="btn secondary">查看往期数据</button>
+            </div>
+        </div>
+
+        <!-- 测试页面 -->
+        <div id="test-screen" class="screen hidden">
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span id="current-question">第 1 题</span>
+                    <span id="total-questions">共 90 题</span>
+                    <span id="remaining-questions">剩余 89 题</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="timer">剩余时间：<span id="time-left">45:00</span></div>
+            </div>
+            
+            <div class="question-container">
+                <h2 id="question-number">第 1 题</h2>
+                <p id="question-text">头痛</p>
+                
+                <div class="options">
+                    <label class="option">
+                        <input type="radio" name="answer" value="1">
+                        <span class="option-text">没有</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="2">
+                        <span class="option-text">很轻</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="3">
+                        <span class="option-text">中等</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="4">
+                        <span class="option-text">偏重</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="5">
+                        <span class="option-text">严重</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="prev-btn" class="btn secondary" disabled>上一题</button>
+                <button id="next-btn" class="btn primary">下一题</button>
+            </div>
+        </div>
+
+        <!-- 结果页面 -->
+        <div id="result-screen" class="screen hidden">
+            <div class="result-container">
+                <!-- 标题部分 -->
+                <div class="result-header">
+                    <h1 class="main-title">测试结果</h1>
+                    <h2 class="sub-title">(SCL-90心理自测)</h2>
+                </div>
+
+                <!-- 用户信息表格 -->
+                <div class="text-section">
+                    <h3>用户信息</h3>
+                    <table class="level-table">
+                        <tr>
+                            <td class="info-label">姓名</td>
+                            <td class="info-value" id="result-nickname">--</td>
+                            <td class="info-label">性别</td>
+                            <td class="info-value" id="result-gender">--</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">年龄</td>
+                            <td class="info-value" id="result-age">--</td>
+                            <td class="info-label">得分</td>
+                            <td class="info-value" id="score-total-display">--</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">用时</td>
+                            <td class="info-value" id="result-duration">--</td>
+                            <td class="info-label">测试时间</td>
+                            <td class="info-value" id="result-test-time">--</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 总评估结果报告 -->
+                <div class="text-section">
+                    <h3>总评估结果报告</h3>
+                    <table class="level-table">
+                        <tr>
+                            <td class="info-label">总评分</td>
+                            <td class="info-label">平均分</td>
+                            <td class="info-label">阳性项目数</td>
+                            <td class="info-label">数值范围</td>
+                        </tr>
+                        <tr>
+                            <td class="info-value" id="total-score">--</td>
+                            <td class="info-value" id="average-score">--</td>
+                            <td class="info-value" id="positive-items">--</td>
+                            <td class="info-value" id="score-range">--</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 各项症状评估结果报告 -->
+                <div class="text-section">
+                    <h3>各项症状评估结果报告</h3>
+                    <table class="level-table" id="symptoms-table">
+                        <thead>
+                            <tr>
+                                <th>因子名</th>
+                                <th>得分</th>
+                                <th>平均分数</th>
+                                <th>参考结果</th>
+                            </tr>
+                        </thead>
+                        <tbody id="symptoms-tbody">
+                        </tbody>
+                    </table>
+                    <p class="table-note">说明：量表只是辅助筛查工具，此量表测试结果仅供参考</p>
+                </div>
+
+                <!-- 得分说明 -->
+                <div class="text-section">
+                    <h3>得分说明</h3>
+                    <p><strong>按全国常模结果，满足以下任一标准，可考虑筛查阳性，需进一步检查：</strong></p>
+                    <ul>
+                        <li>1、总分超过160分；</li>
+                        <li>2、阳性项目数超过43项；</li>
+                        <li>3、任一因子分超过2分。</li>
+                    </ul>
+                    <p><strong>大于250分则比较严重，需要作医学上的详细检查，很可能要做针对性的心理治疗或在医生的指导下服药。</strong></p>
+                    
+                    <p><strong>因子均分的意义：</strong></p>
+                    <ul>
+                        <li>1-2 提示心理健康</li>
+                        <li>2-3 提示亚健康心理状态</li>
+                        <li>3-4 提示有心理健康问题</li>
+                        <li>4-5 提示有严重心理健康问题</li>
+                    </ul>
+                </div>
+
+                <!-- 各个因子分析 -->
+                <div class="factor-analysis" id="factor-analysis">
+                    <!-- 动态生成因子分析 -->
+                </div>
+
+                <!-- 写给亲爱的你 -->
+                <div class="text-section">
+                    <h3>写给亲爱的你</h3>
+                    <p>你已经完成了这次测试，请以理性的心态看待接下来的内容。无论你的测试结果如何，请记住，我们一直都在。SCL-90心理健康自评量表涵盖情绪、思维、人际关系和生活习惯等多个方面，帮助你更好地了解自己的心理状态。测试分数反映的是你近期的心理感受，而不是对你的最终评判。</p>
+                    
+                    <p>如果某些因子的得分较高，可能说明你最近在这些方面感受到了一定的压力或困扰，但这并不代表你一定存在严重问题。很多时候短期的心理波动是正常的，可能是因为学习、工作、人际关系等带来的压力。如果你发现自己在多个维度上长期感到不适，建议你关注自己的心理健康，尝试调整作息、寻找放松方式，或与信任的人倾诉。</p>
+                    
+                    <p>如果你的情绪已经影响到日常生活，并且难以自行调节，请不要犹豫，寻求专业的心理咨询或帮助。心理健康和身体健康一样重要，你值得被关心和支持。</p>
+                </div>
+
+                <!-- 免责声明 -->
+                <div class="disclaimer">
+                    <p>*由于量表只是辅助筛查工具，因此量表测试结果仅供参考，不作诊断依据</p>
+                </div>
+
+                <!-- 下载相关按钮 -->
+                <div class="action-buttons">
+                    <button id="download-pdf" class="btn primary">下载PDF报告</button>
+                    <button id="download-image" class="btn secondary">保存为图片</button>
+                    <button id="restart-test" class="btn">重新测试</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 生日选择模态窗 -->
+    <div id="birthday-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>选择生日</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="date-picker">
+                    <div class="date-picker-header">
+                        <button id="prev-year">&lt;&lt;</button>
+                        <button id="prev-month">&lt;</button>
+                        <span id="current-month-year"></span>
+                        <button id="next-month">&gt;</button>
+                        <button id="next-year">&gt;&gt;</button>
+                    </div>
+                    <div class="date-picker-body">
+                        <div class="weekdays">
+                            <div>日</div>
+                            <div>一</div>
+                            <div>二</div>
+                            <div>三</div>
+                            <div>四</div>
+                            <div>五</div>
+                            <div>六</div>
+                        </div>
+                        <div id="calendar-days" class="calendar-days"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-birthday" class="btn secondary">取消</button>
+                <button id="confirm-birthday" class="btn primary">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
