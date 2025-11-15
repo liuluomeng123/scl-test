@@ -690,9 +690,10 @@ select:focus {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
 }
 
 .level-table th,
@@ -742,6 +743,120 @@ select:focus {
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     border-width: 3px;
+}
+
+/* 因子分析中div.level-table的特殊美化 */
+.factor-analysis .level-table {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+    border: 2px solid #e0e0e0;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.factor-analysis .level-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.factor-analysis .level-table table tr {
+    transition: all 0.3s ease;
+}
+
+.factor-analysis .level-table table tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.factor-analysis .level-table table tr td {
+    padding: 16px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.factor-analysis .level-table table tr td:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.6s ease;
+}
+
+.factor-analysis .level-table table tr td:hover:before {
+    left: 100%;
+}
+
+.factor-analysis .level-table table tr td.active {
+    transform: scale(1.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    border-width: 3px;
+    z-index: 2;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+/* 等级颜色增强 */
+.factor-analysis .level-table .level-normal {
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%) !important;
+    color: #1b5e20 !important;
+    font-weight: 600 !important;
+    border-color: #a5d6a7 !important;
+}
+
+.factor-analysis .level-table .level-mild {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%) !important;
+    color: #e65100 !important;
+    font-weight: 600 !important;
+    border-color: #ffcc80 !important;
+}
+
+.factor-analysis .level-table .level-moderate {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%) !important;
+    color: #b71c1c !important;
+    font-weight: 600 !important;
+    border-color: #ef9a9a !important;
+}
+
+.factor-analysis .level-table .level-severe {
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%) !important;
+    color: #880e4f !important;
+    font-weight: 600 !important;
+    border-color: #f48fb1 !important;
+}
+
+/* 活跃等级特殊效果 */
+.factor-analysis .level-table .level-normal.active {
+    background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%) !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4) !important;
+}
+
+.factor-analysis .level-table .level-mild.active {
+    background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%) !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4) !important;
+}
+
+.factor-analysis .level-table .level-moderate.active {
+    background: linear-gradient(135deg, #ef5350 0%, #d32f2f 100%) !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4) !important;
+}
+
+.factor-analysis .level-table .level-severe.active {
+    background: linear-gradient(135deg, #ec407a 0%, #c2185b 100%) !important;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(233, 30, 99, 0.4) !important;
 }
 
 /* 等级颜色 */
